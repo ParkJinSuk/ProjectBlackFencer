@@ -11,13 +11,14 @@ import DataPreProcess as DPP
 if __name__ == '__main__':
     print("this is main")
 
-    image = cv2.imread('test_image/2_cam-image_array_.jpg')  # 이미지 읽기
+    # image = cv2.imread('test_image/2_cam-image_array_.jpg')  # 이미지 읽기
+    # a = DPP.find_line_orange(image)
+    # b = DPP.find_line_white(image)
+    # c = DPP.merge_lines(a, b, 50)
+    # cv2.imshow('a', a)
+    # cv2.imshow('b', b)
+    # cv2.imshow('c', c)
+    # cv2.waitKey(0)
 
-    a = DPP.find_line_orange(image)
-    b = DPP.find_line_white(image)
-    c = DPP.merge_lines(a, b, 50)
-
-    cv2.imshow('a', a)
-    cv2.imshow('b', b)
-    cv2.imshow('c', c)
-    cv2.waitKey(0)
+    # 학습시 필요한 이미지 전처리
+    DPP.data_preprocess()
