@@ -78,6 +78,11 @@ def filter_color(img):
     img_result = merge_lines(line_orange, line_white, 50)
     return img_result
 
+# 특정위치에 온도 이미지 합성
+def manipulated_hetadata(img, img_het, vertax, scale):
+
+    return img
+
 def data_preprocess():
     path_read = './test_image'
     path_write = './train_image'
@@ -95,15 +100,16 @@ def data_preprocess():
 
 
         # 이미지 전처리 과정
-        #image = filter_color(image)
-        image = filter_edge(image)
+        image = filter_color(image)
+        image2 = filter_edge(image)
 
         # 이미지 저장
         # cv2.imwrite("train_image/"+file_list_read[i], line_image)
 
         # 변환 중인 이미지 보여줌
         cv2.imshow('a', image)
-        cv2.waitKey(50)
+        cv2.imshow('b', image2)
+        cv2.waitKey(100)
 
         # 변환 진행과정 표시
         print("{} of {}".format(i+1, len(file_list_read)+1))
