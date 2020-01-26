@@ -12,7 +12,9 @@ import time  # 시간 측정을 위한 라이브러
 
 # 색
 color_yolo = (150, 110, 250)
+color_black = (0, 0, 0)
 color_white = (255, 255, 255)
+
 
 # ROI 설정하는 함수 (ROI영역이 사각형이 아니더라도 가능함)
 def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # ROI 셋팅
@@ -86,7 +88,7 @@ def het_num2img(num_array):
         for j in range(w):
             print('num_array[', i, j, '] :', num_array[i, j])
             if num_array[i, j] > 10:
-                img[i, j] = (0, 0, 0)
+                img[i, j] = color_black
             elif num_array[i, j] > 5:
                 img[i, j] = (100, 0, 0)
             elif num_array[i, j] > 0:
@@ -95,8 +97,6 @@ def het_num2img(num_array):
                 img[i, j] = (255, 100, 100)
             elif num_array[i, j] > -10:
                 img[i, j] = (255, 200, 200)
-            elif num_array[i, j] > -15:
-                img[i, j] = (255, 255, 255)
             else:
                 img[i, j] = color_white
             print('num_array[', i, j, '] :', num_array[i, j])
@@ -153,8 +153,8 @@ def display():
     #                      [20, 20, 20, 20, 20, 16, 17, 18, 19, 20, 21, 0]])
     het_image = het_num2img(hetadata)
     het_image = cv2.resize(het_image, (300, 300), interpolation=cv2.INTER_CUBIC)
-    cv2.imshow('a', het_image)
-    cv2.waitKey(0)
+    cv2.imshow('het data image', het_image)
+    cv2.waitKey(10)
     ############################################
     #het_image = cv2.imread("het_image.JPG")
 
@@ -178,10 +178,10 @@ def display():
 
         # cv2.imshow('그냥 이미지', img)
         cv2.imshow('het image', img_het_object)
-        print("{} of {} : {}\ttime : {}".format(i + 1, len(file_list_read) + 1, file_list_read[i],
+        print("{}\tof\t{} : {}\ttime : {}".format(i + 1, len(file_list_read) + 1, file_list_read[i],
                                                 round(time.time() - one_process_time, 4)))
 
-        cv2.waitKey(100)
+        cv2.waitKey(50)
 
     print("process total time : {}".format(time.time() - process_time))  # 프로세스 진행시간 표시
 
