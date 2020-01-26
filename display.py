@@ -10,6 +10,10 @@ import numpy as np
 import os
 import time  # 시간 측정을 위한 라이브러
 
+# 색
+color_yolo = (150, 110, 250)
+color_white = (255, 255, 255)
+
 
 def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # ROI 셋팅
     mask = np.zeros_like(img)  # mask = img와 같은 크기의 빈 이미지
@@ -25,6 +29,7 @@ def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # RO
     # 이미지와 color로 채워진 ROI를 합침
     ROI_image = cv2.bitwise_and(img, mask)
     return ROI_image
+
 
 def filter_edge(img):
     height, width = img.shape[:2]  # 이미지 높이, 너비
@@ -49,6 +54,7 @@ def filter_edge(img):
 
     return img
 
+
 # 온도센서로부터 이미지를 받아서 특정좌표에 이미지 합성
 def image_het(img, img_het, center_x, center_y):
     w = 80
@@ -56,10 +62,10 @@ def image_het(img, img_het, center_x, center_y):
 
     # ROI 영역
     vertices = np.array(
-        [[(center_x - w/2, center_y - h/2),
-          (center_x - w/2, center_y + h/2),
-          (center_x + w/2, center_y + h/2),
-          (center_x + w/2, center_y - h/2)]],
+        [[(center_x - w / 2, center_y - h / 2),
+          (center_x - w / 2, center_y + h / 2),
+          (center_x + w / 2, center_y + h / 2),
+          (center_x + w / 2, center_y - h / 2)]],
         dtype=np.int32)
     cv2.fillPoly(img, vertices, (0, 0, 0))
 
@@ -70,9 +76,36 @@ def image_het(img, img_het, center_x, center_y):
 
     return img
 
+
+def het_num2img(num_array):
+    print(num_array[0, 0])
+    print(num_array[0, 11])
+    h, w = num_array.shape[:2]  # 배열의 너비, 높이
+    img = np.zeros((h, w, 3), dtype=np.uint8)
+    for i in range(h):
+        for j in range(w):
+            print('num_array[', i, j, '] :', num_array[i, j])
+            if num_array[i, j] > 10:
+                img[i, j] = (50, 0, 0)
+            elif num_array[i, j] > 5:
+                img[i, j] = (150, 0, 0)
+            elif num_array[i, j] > 0:
+                img[i, j] = (255, 0, 0)
+            elif num_array[i, j] > -5:
+                img[i, j] = (255, 100, 100)
+            elif num_array[i, j] > -10:
+                img[i, j] = (255, 200, 200)
+            elif num_array[i, j] > -15:
+                img[i, j] = (255, 255, 255)
+            else:
+                img[i, j] = color_white
+            print('num_array[', i, j, '] :', num_array[i, j])
+
+    return img
+
+
 # yolo에서 받은 좌표와 물체크기를 이미지 합성
 def image_object(img, center_x, center_y, width, height):
-
     # ROI 영역
     vertices = np.array(
         [[(center_x - width / 2, center_y - height / 2),
@@ -80,9 +113,10 @@ def image_object(img, center_x, center_y, width, height):
           (center_x + width / 2, center_y + height / 2),
           (center_x + width / 2, center_y - height / 2)]],
         dtype=np.int32)
-    cv2.fillPoly(img, vertices, (255, 255, 0))
+    cv2.fillPoly(img, vertices, color_yolo)
 
     return img
+
 
 def display():
     print("## function display start ##")
@@ -92,14 +126,34 @@ def display():
     file_list_read = os.listdir(path_read)
     process_time = time.time()  # 프로세스 진행시간 측정
 
-    # ## 임시방편 임의의 온도배열 생성 12x6
-    # hetadata = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    #                      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    #                      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    #                      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    #                      [10, 20, 30, 40, 50, 60, 70, 80, 90, 10, 11, 12],
-    #                      [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]])
-    het_image = cv2.imread("het_image.JPG")
+    ## 임시방편 임의의 온도배열 생성 12x6 ###
+    ## 온도 데이터배열에서 이미지 전환 테스트 코드
+    # hetadata = np.zeros((10, 15), dtype=np.uint8)
+    # for i in range(10):
+    #     for j in range(15):
+    #         hetadata[i, j] = -5
+    hetadata = np.array([[-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+                         [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+                         [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+                         [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
+                         [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
+                         [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
+                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                         [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+                         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+                         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+                         [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]])
+    het_image = het_num2img(hetadata)
+    het_image = cv2.resize(het_image, (300, 300), interpolation=cv2.INTER_CUBIC)
+    cv2.imshow('a', het_image)
+    cv2.waitKey(0)
+    ############################################
+    #het_image = cv2.imread("het_image.JPG")
 
     for i in range(len(file_list_read)):
         one_process_time = time.time()  # 프로세스 하나 진행시간 측정
@@ -119,15 +173,14 @@ def display():
         img_het = image_het(img_2, het_image, 300, 300)
         img_het_object = image_object(img_het, 300, 200, 100, 50)
 
-        #cv2.imshow('그냥 이미지', img)
+        # cv2.imshow('그냥 이미지', img)
         cv2.imshow('het image', img_het_object)
         print("{} of {} : {}\ttime : {}".format(i + 1, len(file_list_read) + 1, file_list_read[i],
                                                 round(time.time() - one_process_time, 4)))
 
-        cv2.waitKey(50)
+        cv2.waitKey(100)
 
     print("process total time : {}".format(time.time() - process_time))  # 프로세스 진행시간 표시
-
 
 
 if __name__ == '__main__':
