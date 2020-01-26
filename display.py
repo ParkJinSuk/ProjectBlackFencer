@@ -14,7 +14,7 @@ import time  # 시간 측정을 위한 라이브러
 color_yolo = (150, 110, 250)
 color_white = (255, 255, 255)
 
-
+# ROI 설정하는 함수 (ROI영역이 사각형이 아니더라도 가능함)
 def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # ROI 셋팅
     mask = np.zeros_like(img)  # mask = img와 같은 크기의 빈 이미지
 
@@ -30,7 +30,7 @@ def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # RO
     ROI_image = cv2.bitwise_and(img, mask)
     return ROI_image
 
-
+# 차선검출을 위한 엣지 필터함수 (sobel수직성분을 검출함)
 def filter_edge(img):
     height, width = img.shape[:2]  # 이미지 높이, 너비
 
@@ -58,7 +58,7 @@ def filter_edge(img):
 # 온도센서로부터 이미지를 받아서 특정좌표에 이미지 합성
 def image_het(img, img_het, center_x, center_y):
     w = 80
-    h = 50
+    h = 80
 
     # ROI 영역
     vertices = np.array(
@@ -67,16 +67,16 @@ def image_het(img, img_het, center_x, center_y):
           (center_x + w / 2, center_y + h / 2),
           (center_x + w / 2, center_y - h / 2)]],
         dtype=np.int32)
-    cv2.fillPoly(img, vertices, (0, 0, 0))
+    #cv2.fillPoly(img, vertices, (0, 0, 0)) # 주석을 풀면 도로이미지 위에 그대로 합성됨
 
-    roi_het = img[center_y - 25: center_y + 25, center_x - 40: center_x + 40]
+    roi_het = img[center_y - int(h/2): center_y + int(h/2), center_x - int(w/2): center_x + int(w/2)]
     img_het = cv2.resize(img_het, (w, h), interpolation=cv2.INTER_CUBIC)
     _img_roi = cv2.add(img_het, roi_het)
     np.copyto(roi_het, _img_roi)
 
     return img
 
-
+# 온도데이터 배열을 이미지로 바꿔주는 함수
 def het_num2img(num_array):
     print(num_array[0, 0])
     print(num_array[0, 11])
@@ -86,11 +86,11 @@ def het_num2img(num_array):
         for j in range(w):
             print('num_array[', i, j, '] :', num_array[i, j])
             if num_array[i, j] > 10:
-                img[i, j] = (50, 0, 0)
+                img[i, j] = (0, 0, 0)
             elif num_array[i, j] > 5:
-                img[i, j] = (150, 0, 0)
+                img[i, j] = (100, 0, 0)
             elif num_array[i, j] > 0:
-                img[i, j] = (255, 0, 0)
+                img[i, j] = (200, 0, 0)
             elif num_array[i, j] > -5:
                 img[i, j] = (255, 100, 100)
             elif num_array[i, j] > -10:
@@ -128,26 +128,29 @@ def display():
 
     ## 임시방편 임의의 온도배열 생성 12x6 ###
     ## 온도 데이터배열에서 이미지 전환 테스트 코드
-    # hetadata = np.zeros((10, 15), dtype=np.uint8)
-    # for i in range(10):
-    #     for j in range(15):
-    #         hetadata[i, j] = -5
-    hetadata = np.array([[-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
-                         [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
-                         [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
-                         [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
-                         [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
-                         [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
-                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                         [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-                         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-                         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-                         [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]])
+    hetadata = np.zeros((80, 15), dtype=np.int8)
+    for i in range(80):
+        for j in range(15):
+            if i < 40:
+                hetadata[i, j] = (20 - i)
+            else:
+                hetadata[i, j] = (i - 60)
+    # hetadata = np.array([[-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+    #                      [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+    #                      [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+    #                      [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
+    #                      [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
+    #                      [-5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5, -5],
+    #                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #                      [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    #                      [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+    #                      [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+    #                      [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    #                      [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    #                      [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    #                      [20, 20, 20, 20, 20, 16, 17, 18, 19, 20, 21, 0]])
     het_image = het_num2img(hetadata)
     het_image = cv2.resize(het_image, (300, 300), interpolation=cv2.INTER_CUBIC)
     cv2.imshow('a', het_image)
