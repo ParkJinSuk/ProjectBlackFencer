@@ -9,6 +9,7 @@
 
 import cv2
 import os
+import numpy as np
 
 # 색상 범위 - HSV - 색상(Hue), 채도(Saturation), 명도(Value)
 lower_orange = (8, 50, 50)
@@ -17,74 +18,62 @@ upper_orange = (20, 255, 255)
 lower_white = (0, 0, 210)
 upper_white = (255, 255, 255)
 
+# ROI 설정하는 함수 (ROI영역이 사각형이 아니더라도 가능함)
+def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # ROI 셋팅
+    mask = np.zeros_like(img)  # mask = img와 같은 크기의 빈 이미지
 
-# 차선의 주황색을 검출하기 위한 함수 #
-def find_line_orange(img):
-    # 가우시안55 필터 적용
-    img = cv2.GaussianBlur(img, (5, 5), 0)
+    if len(img.shape) > 2:  # Color 이미지(3채널)라면 :
+        color = color3
+    else:  # 흑백 이미지(1채널)라면 :
+        color = color1
 
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    # vertices에 정한 점들로 이뤄진 다각형부분(ROI 설정부분)을 color로 채움
+    cv2.fillPoly(mask, vertices, color)
 
-    # 색상 범위를 제한하여 mask 생성
-    img_mask = cv2.inRange(img_hsv, lower_orange, upper_orange)
+    # 이미지와 color로 채워진 ROI를 합침
+    ROI_image = cv2.bitwise_and(img, mask)
+    return ROI_image
 
-    # 원본 이미지를 가지고 Object 추출 이미지로 생성
-    img_result = cv2.bitwise_and(img, img, mask=img_mask)
-
-    return img_result
-
-
-# 차선의 하얀색을 검출하기 위한 함수 #
-def find_line_white(img):
-    #가우시안55, bilateral 필터적용
-    img = cv2.GaussianBlur(img, (5, 5), 0)
-    img = cv2.bilateralFilter(img, 15, 75, 75)
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-    # 색상 범위를 제한하여 mask 생성
-    img_mask = cv2.inRange(img_hsv, lower_white, upper_white)
-
-    # 원본 이미지를 가지고 Object 추출 이미지로 생성
-    img_result = cv2.bitwise_and(img, img, mask=img_mask)
-
-    return img_result
-
-
-# 차선들의 이미지를 합치고 하늘배경을 제거하는 함수 #
-# img1, img2 인자는 합성할 이미지
-# pixel 은 이미지 위에서부터 제거할 픽셀수
-def merge_lines(img1, img2, pixel):
-    img_result = cv2.bitwise_or(img1, img2)
-
-    for i in range(pixel):
-        for j in range(160):
-            img_result[i, j] = [0, 0, 0]  # 검은색으로 채움
-
-    return img_result
-
-def filter_edge(img):
+def filter_canny(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 입력 받은 화면 Gray로 변환
-    img = cv2.Canny(img, threshold1 = 200, threshold2=300)
+    img = cv2.Canny(img, threshold1=150, threshold2=100)
     img = cv2.GaussianBlur(img, (5, 5), 0)
 
-    for i in range(50):
-        for j in range(160):
+    for i in range(120):
+        for j in range(640):
             img[i, j] = 0  # 검은색으로 채움
     return img
 
-def filter_color(img):
-    line_orange = find_line_orange(img)
-    line_white = find_line_white(img)
-    img_result = merge_lines(line_orange, line_white, 50)
-    return img_result
+def filter_sobel(img):
+    height, width = img.shape[:2]  # 이미지 높이, 너비
 
-# 특정위치에 온도 이미지 합성
-def manipulated_hetadata(img, img_het, vertax, scale):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 입력 받은 화면 Gray로 변환
+    height_cut = 150
+
+    # ROI 영역
+    vertices = np.array(
+        [[(0, height),
+          (0, height_cut),
+          (width, height_cut),
+          (width, height)]],
+        dtype=np.int32)
+
+    img = region_of_interest(img, vertices)  # ROI 설정
+
+    img = cv2.GaussianBlur(img, (5, 5), 0)
+    img = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+    img = cv2.convertScaleAbs(img)
+    img = cv2.cvtColor(np.copy(img), cv2.COLOR_GRAY2BGR)
+    img = cv2.cvtColor(np.copy(img), cv2.COLOR_RGB2HLS)
+
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(img_hsv, np.array([0, 0, 40]), np.array([255, 255, 255]))
+    img = cv2.bitwise_and(img, img, mask=mask)
 
     return img
 
 def data_preprocess():
-    path_read = './test_image'
+    path_read = './demo_road'
     path_write = './train_image'
 
     # 파일리스트 읽어오기
@@ -96,22 +85,26 @@ def data_preprocess():
         return 0
 
     for i in range(len(file_list_read)):
-        image = cv2.imread("test_image/"+file_list_read[i])  # 이미지 읽기
+        img = cv2.imread("demo_road/"+file_list_read[i])  # 이미지 읽기
 
 
         # 이미지 전처리 과정
-        image = filter_color(image)
-        image2 = filter_edge(image)
+        img_canny = filter_canny(img)
+        img_sobel = filter_sobel(img)
 
         # 이미지 저장
         # cv2.imwrite("train_image/"+file_list_read[i], line_image)
 
         # 변환 중인 이미지 보여줌
-        cv2.imshow('a', image)
-        cv2.imshow('b', image2)
-        cv2.waitKey(100)
+        cv2.imshow("real", img)
+        cv2.imshow('canny', img_canny)
+        cv2.imshow('sobel', img_sobel)
+        cv2.waitKey(0)
 
         # 변환 진행과정 표시
         print("{} of {}".format(i+1, len(file_list_read)+1))
 
     print("Preprocessing Complete!")
+
+
+data_preprocess()

@@ -2,14 +2,15 @@
 
 코드 내용 : 라즈베리파이 디스플레이에 보여줄 영상처리
 Lane_detect_sobel.py 리메이크
-[수정 - 2020년1월20일] -
+[수정 - 2020년1월20일]
+ - het iamge image 합성함수 추가
+ - yolo박스 image 합성함수 추가
 '''
 
 import cv2
 import numpy as np
 import os
 import time  # 시간 측정을 위한 라이브러
-
 
 def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # ROI 셋팅
     mask = np.zeros_like(img)  # mask = img와 같은 크기의 빈 이미지
@@ -88,7 +89,7 @@ def display():
     print("## function display start ##")
 
     # 파일리스트 읽어오기
-    path_read = './test_image'
+    path_read = './test_image2'
     file_list_read = os.listdir(path_read)
     process_time = time.time()  # 프로세스 진행시간 측정
 
@@ -104,7 +105,7 @@ def display():
     for i in range(len(file_list_read)):
         one_process_time = time.time()  # 프로세스 하나 진행시간 측정
 
-        image = cv2.imread("test_image/" + file_list_read[i])  # 이미지 읽기
+        image = cv2.imread("test_image2/" + file_list_read[i])  # 이미지 읽기
 
         img = filter_edge(image)
         img = cv2.resize(img, (800, 480), interpolation=cv2.INTER_CUBIC)
@@ -124,7 +125,7 @@ def display():
         print("{} of {} : {}\ttime : {}".format(i + 1, len(file_list_read) + 1, file_list_read[i],
                                                 round(time.time() - one_process_time, 4)))
 
-        cv2.waitKey(50)
+        cv2.waitKey(0)
 
     print("process total time : {}".format(time.time() - process_time))  # 프로세스 진행시간 표시
 
