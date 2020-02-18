@@ -180,3 +180,48 @@ def image_blackice(list_blackice):
                 result[i, j] = (0, 0, 0)
 
     return result
+
+
+# 온도데이터 배열을 이미지로 바꿔주는 함수
+def het_arr2img(num_array):
+    h, w = num_array.shape[:2]  # 배열의 너비, 높이
+    img = np.zeros((h, w, 3), dtype=np.uint8)
+    for i in range(h):
+        for j in range(w):
+            if num_array[i, j] < -5:
+                img[i, j] = (0, 0, 255)
+            elif num_array[i, j] < -3:
+                img[i, j] = (0, 0, 180)
+            elif num_array[i, j] <= 0:
+                img[i, j] = (0, 0, 100)
+            else:
+                img[i, j] = (0, 0, 0)
+            '''    
+                img[i, j] = color_black
+            elif num_array[i, j] > 0:
+                img[i, j] = (0, 0, 100)
+            elif num_array[i, j] > -5:
+                img[i, j] = (0, 0, 180)
+            else:
+                img[i, j] = (0, 0, 255)
+            '''
+    return img
+
+# 온도이미지를 도로상 좌표로 매핑시킨 이미지
+def image_het_mapping(img_het, corner=[[255, 265],
+          [210, 466],
+          [530, 444],
+          [436, 270]]):
+
+    # 온도이미지 mask 생성
+    h, w = img_het.shape[:2]
+    rows = 480
+    cols = 640
+
+    pts1 = np.float32([[w, 0], [0, 0], [w, h], [0, h]]) # 좌우반전 추가
+    pts2 = np.float32([corner[0], corner[3], corner[1], corner[2]])
+
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    img_mask = cv2.warpPerspective(img_het, M, (cols, rows))
+
+    return img_mask
