@@ -72,34 +72,37 @@ for i in range(len(file_list_read_frame)):
     image_het = dpp.het_arr2img(hetdata)
     frame_het = dpp.image_het_mapping(image_het)
     #print(image_het)
+
+
     ##### 이미지 전처리 과정 ###########
     _frame = dpp.filter_sobel(frame) # 차선검출
 
 
-    frame_het = cv2.GaussianBlur(frame_het, (5, 5), 0) # 온도이미지 가우시안블러
-    frame_display = cv2.add(_frame, frame_het)
+    _frame_het = cv2.GaussianBlur(frame_het, (5, 5), 0) # 온도이미지 가우시안블러
+    frame_display = cv2.add(_frame, _frame_het)
 
-    '''
+
     # yolo 좌표값 발생히면 이미지 처리
     for num in range(97):
         if i == csv_data[num][0]:
             yolo_loaction = [csv_data[num][1], csv_data[num][2], csv_data[num][3], csv_data[num][4]]
             list_yolo = dpp.yolo_arr2flat(yolo_loaction)
-            list_het = dpp.image_het2flat(frame_het)
+            list_het = dpp.image_het2flat(frame_het, 15)
             list_blackice = dpp.Find_BlackIce(list_het, list_yolo)
             frame_blackice = dpp.image_blackice(list_blackice)
-            cv2.imshow('blaic', frame_blackice)
-            frame_display = dpp.image_object(frame_display, csv_data[num][1], csv_data[num][2], csv_data[num][3], csv_data[num][4])
-    '''
+            #cv2.imshow('blaic', frame_blackice)
+            #frame_display = dpp.image_object(frame_display, csv_data[num][1], csv_data[num][2], csv_data[num][3], csv_data[num][4])
+            frame_display = cv2.add(frame_display, frame_blackice)
+
     # 이미지 저장
-    # cv2.imwrite("train_image/"+file_list_read[i], line_image)
+    cv2.imwrite("demo_save/demo_frame{0:0>5}.jpg".format(i), frame_display)
 
     # 변환 중인 이미지 보여줌
-    cv2.imshow("het image", image_het)
+    #cv2.imshow("het image", image_het)
     #cv2.imshow("frame", frame)
     #cv2.imshow('frame_het', frame_het)
-    cv2.imshow('display', frame_display)
-    cv2.waitKey(2)
+    #cv2.imshow('display', frame_display)
+    #cv2.waitKey(2)
 
     # 변환 진행과정 표시
     print("{} of {}".format(i + 1, len(file_list_read_frame) + 1))

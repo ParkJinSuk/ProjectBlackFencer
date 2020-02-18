@@ -108,15 +108,16 @@ def yolo_arr2flat(yolo_location):
 
     flat_yolo = np.zeros((width*height), dtype=np.int8)
 
-    for i in range(10):
-        for j in range(10):
+    for i in range(height):
+        for j in range(width):
             if (i+1 >= x-h/2) and (i+1 <= x+h/2):
                 if (j+1 >= y-w/2) and (j+1 <= y+w/2):
                     flat_yolo[i*width + j] = 1
+                    #print("yolo flat[{}] : {}".format(i*width+j, flat_yolo[i*width + j]))
 
     return flat_yolo
 
-def image_het2flat(image_het):
+def image_het2flat(image_het, num):
     '''
     카메라 이미지에 mapping이 된 온도이미지를
     한줄로 flat하게 만들어주는 함수
@@ -132,14 +133,17 @@ def image_het2flat(image_het):
 
     for i in range(height):
         for j in range(width):
-            if img_het[i, j] is (255, 100, 100):
+            if img_het[i, j, 2] - num > 50:
+                result[i*width + j] = 1
+                #print("het fat{} : {}".format(i*width+j, result[i*width + j]))
+                '''
+            elif img_het[i, j] is (0, 0, 200):
                 result[i*width + j] = (1)
-            elif img_het[i, j] is (255, 200, 200):
+            elif img_het[i, j] is (0, 0, 255):
                 result[i*width + j] = (1)
-            elif img_het[i, j] is (255, 255, 255):
-                result[i*width + j] = (1)
+            '''
             else:
-                result[i*width + j] = (0)
+                result[i*width + j] = 0
 
     return result
 
@@ -160,7 +164,7 @@ def Find_BlackIce(het, yolo):
     #print(het[4], yolo[4])
     #print(het[4].dtype, yolo[4].dtype)
     for index in range(len(het)):
-        if (het[index] is 1) and (yolo[index] is 1):
+        if (het[index] == 1) and (yolo[index] == 1):
             blackice[index] = 1
             #print(blackice[index])
     #print(blackice)
@@ -190,8 +194,14 @@ def het_arr2img(num_array):
         for j in range(w):
             if num_array[i, j] < -5:
                 img[i, j] = (0, 0, 255)
+            elif num_array[i, j] < -4:
+                img[i, j] = (0, 0, 230)
             elif num_array[i, j] < -3:
-                img[i, j] = (0, 0, 180)
+                img[i, j] = (0, 0, 190)
+            elif num_array[i, j] < -2:
+                img[i, j] = (0, 0, 160)
+            elif num_array[i, j] < -1:
+                img[i, j] = (0, 0, 120)
             elif num_array[i, j] <= 0:
                 img[i, j] = (0, 0, 100)
             else:
