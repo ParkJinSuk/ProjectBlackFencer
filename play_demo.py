@@ -1,15 +1,23 @@
 import cv2
 import os
 
-path_read_frame = './demo_save'
-file_list_frame = os.listdir(path_read_frame)
+path_read_frame_demo = './demo_save'
+path_read_frame_real = './demo_road'
+file_list_frame_demo = os.listdir(path_read_frame_demo)
+file_list_frame_real = os.listdir(path_read_frame_real)
 
-for i in range(len(file_list_frame)):
+for i in range(len(file_list_frame_demo)):
     print("frame{}".format(i + 1))
-    frame = cv2.imread("demo_save/" + file_list_frame[i])  # 이미지 읽기
-    frame = cv2.resize(frame, (800, 480), interpolation=cv2.INTER_CUBIC)
+    frame_demo = cv2.imread("demo_save/" + file_list_frame_demo[i])  # 이미지 읽기
+    frame_real = cv2.imread("demo_road/" + file_list_frame_real[i])  # 이미지 읽기
 
-    cv2.imshow("frame", frame)
+    #frame = cv2.resize(frame, (800, 480), interpolation=cv2.INTER_CUBIC)
+
+    cv2.imshow("demo", frame_demo)
+    cv2.imshow("real", frame_real)
+    if i == 0:
+        cv2.waitKey(0)
+
     if 0 <= i < 500:
         cv2.waitKey(10)
     elif 500 <= i < 750:
